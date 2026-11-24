@@ -26,6 +26,7 @@ type Config struct {
 	TempBlockDuration      time.Duration
 	MaxRecoveryAttempts    int
 	RecoveryCodePepper     string
+	CORSAllowedOrigin      string
 	MySQL                  MySQL
 }
 
@@ -78,6 +79,7 @@ func build(get func(string) string) (*Config, error) {
 			Password: get("MYSQL_PASSWORD"),
 		},
 		RecoveryCodePepper: get("RECOVERY_CODE_PEPPER"),
+		CORSAllowedOrigin:  envOrDefault(get, "CORS_ALLOWED_ORIGIN", "http://localhost:3000"),
 	}
 
 	var err error

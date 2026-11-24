@@ -17,6 +17,7 @@ func validValues() map[string]string {
 		"TEMP_BLOCK_DURATION":       "10m",
 		"MAX_RECOVERY_ATTEMPTS":     "5",
 		"RECOVERY_CODE_PEPPER":      strings.Repeat("a", 64),
+		"CORS_ALLOWED_ORIGIN":       "http://localhost:5173",
 		"MYSQL_HOST":                "db",
 		"MYSQL_PORT":                "3307",
 		"MYSQL_DATABASE":            "system_login",
@@ -47,6 +48,9 @@ func TestBuild(t *testing.T) {
 	if cfg.MaxFailedLoginAttempts != 4 {
 		t.Errorf("MaxFailedLoginAttempts = %d, want 4", cfg.MaxFailedLoginAttempts)
 	}
+	if cfg.CORSAllowedOrigin != "http://localhost:5173" {
+		t.Errorf("CORSAllowedOrigin = %q, want http://localhost:5173", cfg.CORSAllowedOrigin)
+	}
 	if cfg.MySQLDSN() == "" {
 		t.Error("MySQLDSN returned an empty string")
 	}
@@ -56,6 +60,7 @@ func TestBuildDefaults(t *testing.T) {
 	values := validValues()
 	delete(values, "APP_ENV")
 	delete(values, "APP_PORT")
+	delete(values, "CORS_ALLOWED_ORIGIN")
 	delete(values, "MYSQL_HOST")
 	delete(values, "MYSQL_PORT")
 
@@ -68,6 +73,9 @@ func TestBuildDefaults(t *testing.T) {
 	}
 	if cfg.AppPort != 8080 {
 		t.Errorf("AppPort = %d, want 8080", cfg.AppPort)
+	}
+	if cfg.CORSAllowedOrigin != "http://localhost:3000" {
+		t.Errorf("CORSAllowedOrigin = %q, want default", cfg.CORSAllowedOrigin)
 	}
 	if cfg.MySQL.Host != "localhost" || cfg.MySQL.Port != 3306 {
 		t.Errorf("MySQL = %s:%d, want localhost:3306", cfg.MySQL.Host, cfg.MySQL.Port)

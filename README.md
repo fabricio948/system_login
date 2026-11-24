@@ -20,3 +20,9 @@ Backend de cadastro e autenticação de usuários em **Go 1.27** com **MySQL** v
    ```bash
    docker compose run --rm migrate
    ```
+5. Rode a API:
+   ```bash
+   go run ./cmd/api
+   ```
+
+A API escuta em `APP_PORT` (padrão `8080`) e libera CORS para `CORS_ALLOWED_ORIGIN` (padrão `http://localhost:3000`).
