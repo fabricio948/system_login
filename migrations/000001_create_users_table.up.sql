@@ -1,0 +1,17 @@
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    name VARCHAR(120) NOT NULL,
+    email VARCHAR(180) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    is_admin_blocked BOOLEAN NOT NULL DEFAULT FALSE,
+    blocked_until DATETIME(6) NULL,
+    block_type VARCHAR(32) NULL,
+    block_reason VARCHAR(255) NULL,
+    blocked_at DATETIME(6) NULL,
+    failed_login_attempts INT UNSIGNED NOT NULL DEFAULT 0,
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP (6),
+    updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP (6) ON UPDATE CURRENT_TIMESTAMP (6),
+    PRIMARY KEY (id),
+    UNIQUE KEY uq_users_email (email)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci;

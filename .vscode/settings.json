@@ -1,0 +1,19 @@
+{
+  "go.toolsManagement.autoUpdate": true,
+  "go.useLanguageServer": true,
+  "go.formatTool": "gofmt",
+  "editor.formatOnSave": true,
+  "go.vetOnSave": "package",
+  "go.lintTool": "govet",
+  "go.lintOnSave": "package",
+  "[go]": {
+    "editor.defaultFormatter": "golang.go",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  },
+  "files.exclude": {
+    "**/.git": true
+  }
+}
