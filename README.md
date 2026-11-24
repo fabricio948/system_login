@@ -110,6 +110,85 @@ docker compose run --rm migrate down 1   # desfaz a última migration
 
 O controle fica na tabela `schema_migrations`. As migrations estão em `migrations/` no formato `{versão}_{nome}.up.sql` e `.down.sql`.
 
+## Administração do banco (bloqueio e reativação)
+
+O administrador atua diretamente no MySQL. A senha root está em `MYSQL_ROOT_PASSWORD` no `.env`.
+
+Entre no container:
+
+```bash
+docker exec -it system_login_mysql mysql -u root -p
+```
+
+Ou pelo serviço do Compose:
+
+```bash
+docker compose exec mysql mysql -u root -p
+```
+
+Selecione o banco e consulte a conta:
+
+```sql
+USE system_login;
+
+SELECT id, name, email, is_active, is_admin_blocked, block_type,
+       block_reason, blocked_at, blocked_until, failed_login_attempts
+FROM users
+WHERE email = 'alice@example.com';
+```
+
+> Não altere `email` nem `password_hash`. Atue apenas nos campos de status/bloqueio e no contador de falhas.
+
+### Bloqueio administrativo (sem prazo)
+
+```sql
+UPDATE users
+SET is_admin_blocked = TRUE,
+    block_type = 'admin',
+    block_reason = 'revisão de compliance',
+    blocked_at = NOW(6),
+    blocked_until = NULL
+WHERE email = 'alice@example.com';
+```
+
+A API passa a responder `423` no login e nas rotas autenticadas. O middleware revalida o status em cada requisição, então tokens já emitidos também deixam de ser aceitos.
+
+### Bloqueio temporário manual
+
+```sql
+UPDATE users
+SET is_admin_blocked = FALSE,
+    block_type = 'temporary',
+    block_reason = 'bloqueio manual',
+    blocked_at = NOW(6),
+    blocked_until = NOW(6) + INTERVAL 10 MINUTE,
+    failed_login_attempts = 4
+WHERE email = 'alice@example.com';
+```
+
+### Reativação
+
+Limpa bloqueios e zera o contador de falhas:
+
+```sql
+UPDATE users
+SET is_admin_blocked = FALSE,
+    block_type = NULL,
+    block_reason = NULL,
+    blocked_at = NULL,
+    blocked_until = NULL,
+    failed_login_attempts = 0
+WHERE email = 'alice@example.com';
+```
+
+Se a conta foi desativada pelo próprio usuário (soft delete), reative com:
+
+```sql
+UPDATE users SET is_active = TRUE WHERE email = 'alice@example.com';
+```
+
+O soft delete mantém o e-mail reservado; ao reativar, a conta volta a usar o mesmo e-mail. As sessões antigas continuam revogadas, então é necessário fazer login novamente.
+
 ## Executar a API
 
 A partir da raiz do projeto:
@@ -300,31 +379,6 @@ Com a API rodando:
 5. Solicite recuperação, redefina a senha e confirme que as sessões anteriores foram revogadas.
 6. Erre a senha 4 vezes e confirme o bloqueio `423`.
 7. Altere a senha, desative a conta e confirme que o e-mail continua reservado.
-
-### Bloqueio administrativo
-
-O administrador atua diretamente no banco:
-
-```sql
-UPDATE users
-SET is_admin_blocked = TRUE,
-    block_type = 'admin',
-    block_reason = 'revisão de compliance'
-WHERE email = 'alice@example.com';
-```
-
-Para reativar:
-
-```sql
-UPDATE users
-SET is_admin_blocked = FALSE,
-    block_type = NULL,
-    block_reason = NULL,
-    blocked_at = NULL,
-    blocked_until = NULL,
-    failed_login_attempts = 0
-WHERE email = 'alice@example.com';
-```
 
 ## Segurança
 
