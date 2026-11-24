@@ -2,8 +2,7 @@ FROM golang:1.27-alpine AS builder
 
 WORKDIR /app
 
-# go.sum is copied once the first dependency is added.
-COPY go.mod ./
+COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
