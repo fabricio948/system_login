@@ -12,12 +12,28 @@ services:
       - "${MYSQL_PORT}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./migrations:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      test: ["CMD-SHELL", "mysql -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" -e 'SELECT 1' >/dev/null 2>&1"]
       interval: 5s
       timeout: 5s
       retries: 10
+
+  migrate:
+    image: migrate/migrate:v4.18.3
+    profiles: ["tools"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      MIGRATE_DATABASE: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@tcp(mysql:3306)/${MYSQL_DATABASE}?multiStatements=true
+    volumes:
+      - ./migrations:/migrations:ro
+    entrypoint:
+      - /bin/sh
+      - -c
+      - exec migrate -path=/migrations -database "$$MIGRATE_DATABASE" "$$@"
+      - --
+    command: ["up"]
 
 volumes:
   mysql_data:

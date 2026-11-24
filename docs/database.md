@@ -2,13 +2,26 @@
 
 ## Execução via Docker
 
-- Subir banco: `docker compose up -d`
+- Subir banco: `docker compose up -d mysql`
 - Acessar MySQL no container: `docker exec -it system_login_mysql mysql -u root -p`
 
 ## Migrations
 
-- Scripts SQL ficam em `migrations/`.
-- Na primeira inicialização do volume, o MySQL executa os arquivos em `/docker-entrypoint-initdb.d`. Para ambientes já iniciados ou controle explícito, aplicar os scripts `.up.sql` via CLI MySQL ou ferramenta de migration dedicada.
+- Scripts SQL ficam em `migrations/` no formato `{versão}_{nome}.up.sql` e `{versão}_{nome}.down.sql`.
+- O diretório **não** é montado em `/docker-entrypoint-initdb.d`: esse entrypoint executa também os `.down.sql` e só roda em volume vazio, impedindo que migrations novas fossem aplicadas.
+- As migrations são aplicadas pelo [golang-migrate](https://github.com/golang-migrate/migrate) através do serviço `migrate` (profile `tools`):
+
+  ```bash
+  docker compose up -d mysql
+  docker compose run --rm migrate          # aplica todas as migrations pendentes
+  docker compose run --rm migrate version  # mostra a versão atual
+  docker compose run --rm migrate down 1   # desfaz a última migration
+  docker compose run --rm migrate force 3  # marca a versão 3 como aplicada (reparo)
+  ```
+
+- O controle de versão fica na tabela `schema_migrations`, criada automaticamente.
+- A DSN usa `MYSQL_USER`, `MYSQL_PASSWORD` e `MYSQL_DATABASE` do `.env`. Se a senha contiver caracteres especiais (`@`, `:`, `/`), ela deve ser URL-encoded.
+- Nunca edite uma migration já aplicada; crie uma nova versão.
 
 ## Restrição do Administrador
 

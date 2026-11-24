@@ -14,5 +14,9 @@ Backend de cadastro e autenticação de usuários em **Go 1.27** com **MySQL** v
 2. Copie `.env.example` para `.env` e ajuste as credenciais.
 3. Suba o banco de dados:
    ```bash
-   docker compose up -d
+   docker compose up -d mysql
+   ```
+4. Aplique as migrations:
+   ```bash
+   docker compose run --rm migrate
    ```

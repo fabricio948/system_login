@@ -15,3 +15,9 @@ API backend em Go 1.27 estruturada em camadas com dependências apontando para a
 
 - Dependências são injetadas via construtores (`NewAuthService(repo, notifier, ...)`).
 - Interfaces de notificação/eventos isolam o `service` de brokers futuros (RabbitMQ/Kafka).
+
+## Tokens e Hashing
+
+- Access e refresh tokens são valores opacos aleatórios (não JWT); o banco guarda apenas o SHA-256 em hexadecimal, compatível com as colunas `CHAR(64)`.
+- O código de recuperação tem baixa entropia (6 dígitos) e é validado por HMAC-SHA256 usando `RECOVERY_CODE_PEPPER` do `.env`, também armazenado como 64 caracteres hexadecimais.
+- Senhas usam bcrypt e nunca são persistidas em texto puro.
