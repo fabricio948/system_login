@@ -41,6 +41,8 @@ Backend de cadastro e autenticação de usuários em **Go 1.27** com **MySQL 8.4
 └── .env.example
 ```
 
+A camada de transporte HTTP fica em `internal/handler`; o projeto não mantém um pacote `controller` separado.
+
 ## Pré-requisitos
 
 - Go 1.27+
